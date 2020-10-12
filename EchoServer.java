@@ -78,7 +78,8 @@ public class EchoServer extends AbstractServer
    */
   @Override
   protected void clientConnected(ConnectionToClient client){
-    System.out.println("New client "+client.toString()+" connected. Welcome!");
+    String info = "New client "+client.toString()+" connected. Welcome!";
+    this.sendToAllClients(info);
   }
 
   /**
@@ -88,7 +89,8 @@ public class EchoServer extends AbstractServer
   @Override
   synchronized protected void clientException(
     ConnectionToClient client, Throwable exception) {
-      System.out.println("A client has disconnected from the server");
+      String info = "A client has disconnected from the server";
+      this.sendToAllClients(info);
   }
   
   //Class methods ***************************************************
