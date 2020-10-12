@@ -69,21 +69,105 @@ public class ChatClient extends AbstractClient
   {
     try
     {
+      //Check for special commands
+      if(message.startsWith("#")){
+        handleClientFunctions(message);
+        return;
+      }
+      
       sendToServer(message);
+
+      // attempt to create a temporary socket object -- if it
+      // fails, then terminate the client
       try{
-        // attempt to create a temporary socket object -- if it
-        // fails, then terminate the client
         Socket temp = new Socket(getHost(),getPort());
         temp.close();
       }catch(Exception e){
         connectionException(e);
       }
+
     }
     catch(IOException e)
     {
       clientUI.display
         ("Could not send message to server.  Terminating client.");
       quit();
+    }
+  }
+
+  private void handleClientFunctions(String msg){
+    if(msg.equals("#quit")){
+      disconnectFromServer(); //see method definition below this method
+      System.out.println("Quitting the program");
+      quit();
+
+    }else if(msg.equals("#logoff")){
+      disconnectFromServer();
+
+    }else if(msg.startsWith("#sethost") || msg.startsWith("#setport")){
+
+      boolean isPort = msg.startsWith("#setport");
+
+      if(isConnected()){
+        System.out.println("You must log out (#logoff) before setting a " +
+        (isPort ? "port" : "host"));
+        return;
+      }
+
+      if(msg.split(" ").length < 2){
+        System.out.println("1 argument required: " + 
+        (isPort ? "#setport <port> - No port specified" :
+        "#sethost <host> - No host specified"));
+        return;
+      }
+
+      if(!isPort){
+        String newHost = msg.split(" ")[1];
+        setHost(newHost);
+        System.out.println("Set host to "+newHost);
+        return;
+      }
+
+      try{
+        int newPort = Integer.parseInt(msg.split(" ")[1]);
+        setPort(newPort);
+        System.out.println("Set port to "+Integer.toString(newPort));
+      }catch(NumberFormatException e){
+        System.out.println("Error: port must be an integer");
+      }
+
+    }else if(msg.equals("#login")){
+      
+      if(isConnected()){
+        System.out.println(
+          "You first must log out (#logoff) before you can log in again");
+          return;
+      }
+
+      try{
+        openConnection();
+      }catch(IOException e){
+        System.out.println("Couldn't connect to the server. Try again.");
+      }
+      
+    }else if(msg.equals("#gethost") || msg.equals("#getport")){
+      boolean isPort = msg.equals("#getport");
+
+      System.out.println("Current " + (isPort ? "port: " + getPort() :
+      "host: " + getHost()));
+
+    }else
+      System.out.println("Invalid command: '"+msg+"' is not recognized");
+  }
+
+  private void disconnectFromServer(){
+    try{
+      System.out.println("\nDisconnecting from the server...");
+      closeConnection();
+      System.out.println("Disconnected successfully");
+
+    }catch(IOException e){
+      System.out.println("Unable to disconnect from server");
     }
   }
 
