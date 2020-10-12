@@ -71,6 +71,25 @@ public class EchoServer extends AbstractServer
     System.out.println
       ("Server has stopped listening for connections.");
   }
+
+  /**
+   * Implementation of AbstractServer hook to print a welcome message
+   * when a client connects to the server.
+   */
+  @Override
+  protected void clientConnected(ConnectionToClient client){
+    System.out.println("New client "+client.toString()+" connected. Welcome!");
+  }
+
+  /**
+   * Implementation of AbstractServer hook to print a message stating
+   * a client has disconnected from the server.
+   */
+  @Override
+  synchronized protected void clientException(
+    ConnectionToClient client, Throwable exception) {
+      System.out.println("A client has disconnected from the server");
+  }
   
   //Class methods ***************************************************
   

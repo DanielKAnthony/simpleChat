@@ -7,6 +7,7 @@ package client;
 import ocsf.client.*;
 import common.*;
 import java.io.*;
+import java.net.Socket;
 
 /**
  * This class overrides some of the methods defined in the abstract
@@ -69,6 +70,14 @@ public class ChatClient extends AbstractClient
     try
     {
       sendToServer(message);
+      try{
+        // attempt to create a temporary socket object -- if it
+        // fails, then terminate the client
+        Socket temp = new Socket(getHost(),getPort());
+        temp.close();
+      }catch(Exception e){
+        connectionException(e);
+      }
     }
     catch(IOException e)
     {
@@ -76,6 +85,12 @@ public class ChatClient extends AbstractClient
         ("Could not send message to server.  Terminating client.");
       quit();
     }
+  }
+
+  @Override
+  protected void connectionException(Exception exception){
+    System.out.println("The server has shut down. Quitting.");
+    quit();
   }
   
   /**
