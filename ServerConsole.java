@@ -28,17 +28,27 @@ public class ServerConsole implements ChatIF{
      */
     Scanner serverIO;
 
+    EchoServer echoServer;
+
     /**
      * Constructs a ServerConsole instance.
      * @param host host address
      * @param port port to listen on
      */
     public ServerConsole(String host, int port){
+        echoServer = new EchoServer(port);
+        try{
+            echoServer.listen(); 
+        }catch(IOException e){
+            System.out.println("Error2: could not start server");
+        }
+
         try{
             client = new ChatClient(host,port,this);
         }catch(IOException e){
-            System.out.println("Error: could not start server");
+            System.out.println("Error1: could not start server");
         }
+
         serverIO = new Scanner(System.in);
     }
     
@@ -53,6 +63,12 @@ public class ServerConsole implements ChatIF{
 
             while(true){
                 message = serverIO.nextLine();
+
+                if(message.startsWith("#")){
+                    handleClientFunctions(message);
+                    continue;
+                }
+
                 client.handleMessageFromClientUI("SERVER MSG> " + message);
             }
         }catch (Exception e) {
@@ -61,8 +77,70 @@ public class ServerConsole implements ChatIF{
         }
     }
 
+    private void handleClientFunctions(String msg){
+        if(msg.equals("#quit")){
+            try{
+                echoServer.close();
+            }catch(IOException e){
+                System.out.println("Error: could not close server");
+            }
+
+        }else if(msg.equals("#stop")){
+            if(!echoServer.isListening()){
+                System.out.println("Server already stopped");
+                return;
+            }
+            echoServer.stopListening();
+            
+        }else if(msg.equals("#close")){
+            echoServer.stopListening();
+            try{
+                client.closeConnection();
+            }catch(IOException e){
+                System.out.println("Could not close connection");
+            }
+            System.out.println("Server closed");
+            
+        }else if(msg.startsWith("#setport")){
+            if(echoServer.isListening()){
+                System.out.println("Cannot set port while server is listening");
+                return;
+            }
+
+            if(msg.split(" ").length < 2){
+                System.out.println("1 argument required: #setport <port>");
+                return;
+            }
+
+            try{
+                int pt = Integer.parseInt(msg.split(" ")[1]);
+                echoServer.setPort(pt);
+                System.out.println("Port set to " + echoServer.getPort());
+            }catch(NumberFormatException e){
+                System.out.println("Error: <port> argument must be an integer");
+            }
+
+        }else if(msg.equals("#start")){
+            if(echoServer.isListening()){
+                System.out.println("Server is already listening for connections");
+                return;
+            }
+
+            try{
+                echoServer.listen();
+            }catch(IOException e){
+                System.out.println("Could not start server");
+            }
+
+        }else if(msg.equals("#getport")){
+            System.out.println("Server running on port " + echoServer.getPort());
+            
+        }else
+            System.out.println("Invalid command: '"+msg+"' is not recognized");
+      }
+
     /**
-     * Implemantion of ChatIF abstract method.
+     * Implemention of ChatIF abstract method.
      * Displays all messages sent to the server on the console.
      * This method only behaves in a local scope, and is why the
      * SERVER MSG> string was added in the accept() method.
@@ -88,8 +166,6 @@ public class ServerConsole implements ChatIF{
             port = DEFAULT_PORT;
         }
 
-        EchoServer.main(new String[] {Integer.toString(port)}); // start server
-        
         ServerConsole chat = new ServerConsole(host, port);
         chat.accept();  //Enable server-side messaging
   }
