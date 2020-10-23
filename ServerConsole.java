@@ -2,6 +2,7 @@
 // to a give a global messaging feature to the server-side user
 import common.*;
 import client.*;
+import ocsf.server.*;
 import java.io.IOException;
 import java.util.Scanner;
 
@@ -69,6 +70,14 @@ public class ServerConsole implements ChatIF{
                     continue;
                 }
 
+                // avoid sending message while server is closed
+                // which would terminate the program by default
+                if(client == null) continue;
+                if(!client.isConnected()){
+                    System.out.println(
+                        "Failed to send message - server is not connected");
+                }
+
                 client.handleMessageFromClientUI("SERVER MSG> " + message);
             }
         }catch (Exception e) {
@@ -94,11 +103,12 @@ public class ServerConsole implements ChatIF{
             
         }else if(msg.equals("#close")){
             echoServer.stopListening();
+            client = null;
             try{
-                client.closeConnection();
-            }catch(IOException e){
-                System.out.println("Could not close connection");
-            }
+                
+                echoServer.close();
+            }catch(IOException e){}
+
             System.out.println("Server closed");
             
         }else if(msg.startsWith("#setport")){

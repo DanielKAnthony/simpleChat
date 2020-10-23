@@ -77,14 +77,8 @@ public class ChatClient extends AbstractClient
       
       sendToServer(message);
 
-      // attempt to create a temporary socket object -- if it
-      // fails, then terminate the client
-      try{
-        Socket temp = new Socket(getHost(),getPort());
-        temp.close();
-      }catch(Exception e){
-        connectionException(e);
-      }
+      // Invoke connectionException if a connection to the server cannot be established
+      if(!isConnected()) connectionException(new IOException());
 
     }
     catch(IOException e)
