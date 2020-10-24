@@ -45,7 +45,7 @@ public class ServerConsole implements ChatIF{
         }
 
         try{
-            client = new ChatClient(host,port,this);
+            client = new ChatClient(null, host, port, true, this);
         }catch(IOException e){
             System.out.println("Error1: could not start server");
         }
@@ -70,9 +70,6 @@ public class ServerConsole implements ChatIF{
                     continue;
                 }
 
-                // avoid sending message while server is closed
-                // which would terminate the program by default
-                if(client == null) continue;
                 if(!client.isConnected()){
                     System.out.println(
                         "Failed to send message - server is not connected");
@@ -103,11 +100,17 @@ public class ServerConsole implements ChatIF{
             
         }else if(msg.equals("#close")){
             echoServer.stopListening();
-            client = null;
-            try{
-                
-                echoServer.close();
-            }catch(IOException e){}
+
+            Thread[] clientThreadList = echoServer.getClientConnections();
+            // start loop at 1 - ServerConsole ChatClient instance will
+            // always be the first thread and must remain connected
+            for (int i = 1;i<clientThreadList.length;++i){
+                try{
+                    ((ConnectionToClient)clientThreadList[i]).close();
+                }
+                // Ignore all exceptions when closing clients.
+                catch(Exception ex) {}
+            }
 
             System.out.println("Server closed");
             

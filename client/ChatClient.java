@@ -28,23 +28,47 @@ public class ChatClient extends AbstractClient
    */
   ChatIF clientUI; 
 
-  
+  /**
+   * username string varible to store the name specified by a user
+   */
+  String username;
+
+  /**
+   * Variable stating whether the specific chat client instance is for
+   * a server console or a client console. This will determine whether the
+   * username parameter must not be null, and whether the #login command
+   * must be sent to the server
+   */
+  boolean isServer;
+
   //Constructors ****************************************************
   
   /**
    * Constructs an instance of the chat client.
    *
+   * @param username username the is to be referred to.
    * @param host The server to connect to.
    * @param port The port number to connect on.
    * @param clientUI The interface type variable.
    */
   
-  public ChatClient(String host, int port, ChatIF clientUI) 
+  public ChatClient(String username, String host, int port, boolean isServer, ChatIF clientUI) 
     throws IOException 
   {
     super(host, port); //Call the superclass constructor
+
+    this.isServer = isServer;
+
+    if(!isServer && username == null){
+      System.out.println("Error: no username was specified");
+      quit();
+    }
+    
+    this.username = username;
     this.clientUI = clientUI;
     openConnection();
+    //send client login id to server
+    if(!isServer) sendToServer("#login " + username);
   }
 
   
@@ -78,7 +102,7 @@ public class ChatClient extends AbstractClient
       sendToServer(message);
 
       // Invoke connectionException if a connection to the server cannot be established
-      if(!isConnected()) connectionException(new IOException());
+      if(!isServer && !isConnected()) connectionException(new IOException());
 
     }
     catch(IOException e)

@@ -48,8 +48,21 @@ public class EchoServer extends AbstractServer
   public void handleMessageFromClient
     (Object msg, ConnectionToClient client)
   {
+    //check for #login command and ensure a <loginid> arguments has been included
+    if(msg.toString().startsWith("#login") && msg.toString().split(" ").length > 1){
+      client.setInfo("login id", msg.toString().split(" ")[1]);
+
+      System.out.println("Client logged in with name " + msg.toString().split(" ")[1]);
+      this.sendToAllClients(client.getInfo("login id") + " joined the chat");
+
+      return;
+    }
+
     System.out.println("Message received: " + msg + " from " + client);
-    this.sendToAllClients(msg);
+    if(getClientConnections()[0] != client) // if it's not the server console
+      this.sendToAllClients(client.getInfo("login id") +": "+ msg);
+    else
+      this.sendToAllClients(msg);
   }
     
   /**
