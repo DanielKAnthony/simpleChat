@@ -142,14 +142,14 @@ public class ChatClient extends AbstractClient
       if(!isPort){
         String newHost = msg.split(" ")[1];
         setHost(newHost);
-        System.out.println("Set host to "+newHost);
+        System.out.println("Host set to: "+newHost);
         return;
       }
 
       try{
         int newPort = Integer.parseInt(msg.split(" ")[1]);
         setPort(newPort);
-        System.out.println("Set port to "+Integer.toString(newPort));
+        System.out.println("Port set to: "+Integer.toString(newPort));
       }catch(NumberFormatException e){
         System.out.println("Error: port must be an integer");
       }
@@ -164,6 +164,7 @@ public class ChatClient extends AbstractClient
 
       try{
         openConnection();
+        sendToServer("#login " + username);
       }catch(IOException e){
         System.out.println("Couldn't connect to the server. Try again.");
       }
@@ -180,9 +181,8 @@ public class ChatClient extends AbstractClient
 
   private void disconnectFromServer(){
     try{
-      System.out.println("\nDisconnecting from the server...");
       closeConnection();
-      System.out.println("Disconnected successfully");
+      System.out.println("Connection closed");
 
     }catch(IOException e){
       System.out.println("Unable to disconnect from server");

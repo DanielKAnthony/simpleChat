@@ -55,8 +55,6 @@ public class ClientConsole implements ChatIF
     try 
     {
       client= new ChatClient(username, host, port, false, this);
-      
-      
     } 
     catch(IOException exception) 
     {

@@ -55,7 +55,7 @@ public class ServerConsole implements ChatIF{
     
     /**
      * Listens for end user input. Sends messages with a 
-     * concatonated SERVER MSG> string to notify users that the
+     * concatonated SERVER MESSAGE> string to notify users that the
      * message orginates from the server.
      */
     void accept(){
@@ -75,7 +75,7 @@ public class ServerConsole implements ChatIF{
                         "Failed to send message - server is not connected");
                 }
 
-                client.handleMessageFromClientUI("SERVER MSG> " + message);
+                client.handleMessageFromClientUI("SERVER MESSAGE> " + message);
             }
         }catch (Exception e) {
           System.out.println
@@ -97,6 +97,17 @@ public class ServerConsole implements ChatIF{
                 return;
             }
             echoServer.stopListening();
+            //loop to exclude server console from message
+            Thread[] clientThreadList = echoServer.getClientConnections();
+            for (int i = 1;i<clientThreadList.length;++i){
+                try{
+                    ConnectionToClient clientConn = (ConnectionToClient)clientThreadList[i];
+                    clientConn.sendToClient("WARNING - Server has stopped listening for connections");
+                }
+                // Ignore all exceptions when closing clients.
+                catch(Exception ex) {}
+            }
+            
             
         }else if(msg.equals("#close")){
             echoServer.stopListening();
@@ -106,13 +117,19 @@ public class ServerConsole implements ChatIF{
             // always be the first thread and must remain connected
             for (int i = 1;i<clientThreadList.length;++i){
                 try{
+                    ConnectionToClient clientConn = (ConnectionToClient)clientThreadList[i];
+                    clientConn.sendToClient(
+                        "SERVER SHUTTING DOWN! DISCONNECTING!\nAbnormal termination of client.");
+                    
+                    String clientId = clientConn.getInfo("login id").toString();
                     ((ConnectionToClient)clientThreadList[i]).close();
+                    System.out.println(clientId + " has disconnected");
                 }
                 // Ignore all exceptions when closing clients.
                 catch(Exception ex) {}
             }
 
-            System.out.println("Server closed");
+            // System.out.println("Server closed");
             
         }else if(msg.startsWith("#setport")){
             if(echoServer.isListening()){
@@ -156,11 +173,11 @@ public class ServerConsole implements ChatIF{
      * Implemention of ChatIF abstract method.
      * Displays all messages sent to the server on the console.
      * This method only behaves in a local scope, and is why the
-     * SERVER MSG> string was added in the accept() method.
+     * SERVER MESSAGE> string was added in the accept() method.
      */
     @Override
     public void display(String message){
-        System.out.println("> " + message);
+        System.out.println(message);
     }
 
     /**
